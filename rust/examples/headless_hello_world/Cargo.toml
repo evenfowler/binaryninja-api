@@ -1,0 +1,8 @@
+[package]
+name = "headless_hello_world"
+version = "0.1.0"
+authors = ["Kyle Martin <kyle@vector35.com>"]
+edition = "2018"
+
+[dependencies]
+binaryninja = {path="../../", features = ["headless"]}

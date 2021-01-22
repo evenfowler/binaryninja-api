@@ -149,7 +149,7 @@ fn main() {
         println!("cargo:rustc-link-search={}", link_path.to_str().unwrap());
     }
 
-    #[warn(unused_assignments)]
+    #[allow(unused_mut, unused_assignments)]
     let mut is_mac = false;
     #[cfg(target_os = "macos")]
     {
