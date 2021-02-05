@@ -2169,6 +2169,30 @@ vector<VariableReferenceSource> Function::GetHighLevelILVariableReferencesInRang
 }
 
 
+uint64_t Function::GetHighestAddress()
+{
+	return BNGetFunctionHighestAddress(m_object);
+}
+
+
+uint64_t Function::GetLowestAddress()
+{
+	return BNGetFunctionLowestAddress(m_object);
+}
+
+
+std::vector<BNAddressRange> Function::GetAddressRanges()
+{
+	size_t count;
+	BNAddressRange* ranges = BNGetFunctionAddressRanges(m_object, &count);
+
+	std::vector<BNAddressRange> result;
+	copy(&ranges[0], &ranges[count], back_inserter(result));
+	BNFreeAddressRanges(ranges);
+	return result;
+}
+
+
 AdvancedFunctionAnalysisDataRequestor::AdvancedFunctionAnalysisDataRequestor(Function* func): m_func(func)
 {
 	if (m_func)

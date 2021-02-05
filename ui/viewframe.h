@@ -117,6 +117,18 @@ public:
 	virtual bool findNextConstant(uint64_t start, uint64_t end, uint64_t constant, uint64_t& addr, DisassemblySettingsRef settings,
 		const std::function<bool (size_t current, size_t total)>& cb);
 
+	virtual bool findAllData(uint64_t start, uint64_t end, const BinaryNinja::DataBuffer& data, BNFindFlag flags,
+		const std::function<bool (size_t current, size_t total)>& cb,
+		const std::function<bool (uint64_t addr, const BinaryNinja::DataBuffer& match)>& matchCallback);
+	virtual bool findAllText(uint64_t start, uint64_t end, const std::string& data, 
+		DisassemblySettingsRef settings, BNFindFlag flags,
+		const std::function<bool (size_t current, size_t total)>& cb,
+		const std::function<bool (uint64_t addr, const std::string& match)>& matchCallback);
+	virtual bool findAllConstant(uint64_t start, uint64_t end, uint64_t constant, 
+		DisassemblySettingsRef settings,
+		const std::function<bool (size_t current, size_t total)>& cb,
+		const std::function<bool (uint64_t addr)>& matchCallback);
+
 	virtual BinaryViewRef getData() = 0;
 	virtual uint64_t getCurrentOffset() = 0;
 	virtual BNAddressRange getSelectionOffsets();
@@ -366,6 +378,11 @@ public:
 	void editTag(TagRef tag);
 	void nextTag();
 	void prevTag();
+
+	void startNewFind(const BinaryNinja::FindParameters& params, bool focusWidget);
+	bool updateSearchProgress(uint64_t cur, uint64_t total);
+	void notifySearchCompleted();
+	void addSearchResult(uint64_t addr, const BinaryNinja::DataBuffer& match);
 
 	virtual UIActionContext actionContext();
 	void bindActions();

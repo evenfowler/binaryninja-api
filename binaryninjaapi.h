@@ -1180,6 +1180,8 @@ __attribute__ ((format (printf, 1, 2)))
 		BNTypeReferenceType type;
 	};
 
+
+
 	struct InstructionTextToken
 	{
 		enum
@@ -1725,17 +1727,32 @@ __attribute__ ((format (printf, 1, 2)))
 
 		void RegisterPlatformTypes(Platform* platform);
 
-		bool FindNextData(uint64_t start, const DataBuffer& data, uint64_t& addr, BNFindFlag flags = FindCaseSensitive);
+		bool FindNextData(uint64_t start, const DataBuffer& data, uint64_t& result,
+			BNFindFlag flags = FindCaseSensitive);
 		bool FindNextText(uint64_t start, const std::string& data, uint64_t& addr, Ref<DisassemblySettings> settings,
 			BNFindFlag flags = FindCaseSensitive);
 		bool FindNextConstant(uint64_t start, uint64_t constant, uint64_t& addr, Ref<DisassemblySettings> settings);
 
-		bool FindNextData(uint64_t start, uint64_t end, const DataBuffer& data, uint64_t& addr, BNFindFlag flags,
-			const std::function<bool(size_t current, size_t total)>& progress);
-		bool FindNextText(uint64_t start, uint64_t end, const std::string& data, uint64_t& addr, Ref<DisassemblySettings> settings,
+		bool FindNextData(uint64_t start, uint64_t end, const DataBuffer& data, uint64_t& addr,
 			BNFindFlag flags, const std::function<bool(size_t current, size_t total)>& progress);
-		bool FindNextConstant(uint64_t start, uint64_t end, uint64_t constant, uint64_t& addr, Ref<DisassemblySettings> settings,
+		bool FindNextText(uint64_t start, uint64_t end, const std::string& data, uint64_t& addr,
+			Ref<DisassemblySettings> settings, BNFindFlag flags,
 			const std::function<bool(size_t current, size_t total)>& progress);
+		bool FindNextConstant(uint64_t start, uint64_t end, uint64_t constant, uint64_t& addr,
+			Ref<DisassemblySettings> settings,
+			const std::function<bool(size_t current, size_t total)>& progress);
+
+		bool FindAllData(uint64_t start, uint64_t end, const DataBuffer& data, BNFindFlag flags,
+			const std::function<bool(size_t current, size_t total)>& progress,
+			const std::function<bool(uint64_t addr, const DataBuffer& match)>& matchCallback);
+		bool FindAllText(uint64_t start, uint64_t end, const std::string& data,
+			Ref<DisassemblySettings> settings, BNFindFlag flags,
+			const std::function<bool(size_t current, size_t total)>& progress,
+			const std::function<bool(uint64_t addr, const std::string& match)>& matchCallback);
+		bool FindAllConstant(uint64_t start, uint64_t end, uint64_t constant,
+			Ref<DisassemblySettings> settings,
+			const std::function<bool(size_t current, size_t total)>& progress,
+			const std::function<bool(uint64_t addr)>& matchCallback);
 
 		void Reanalyze();
 
@@ -3288,6 +3305,10 @@ __attribute__ ((format (printf, 1, 2)))
 
 		BNDeadStoreElimination GetVariableDeadStoreElimination(const Variable& var);
 		void SetVariableDeadStoreElimination(const Variable& var, BNDeadStoreElimination mode);
+
+		uint64_t GetHighestAddress();
+		uint64_t GetLowestAddress();
+		std::vector<BNAddressRange> GetAddressRanges();
 	};
 
 	class AdvancedFunctionAnalysisDataRequestor
@@ -5522,5 +5543,20 @@ __attribute__ ((format (printf, 1, 2)))
 		const char*  m_rust_string;
 		const char** m_rust_array;
 		uint64_t m_length;
+	};
+
+	struct FindParameters
+	{
+		BNFindType type;
+		BNFindRangeType rangeType;
+		std::string string;
+		BNFindFlag flags;
+		bool findAll;
+
+		uint64_t findConstant;
+		DataBuffer findBuffer;
+	
+		std::vector<BNAddressRange> ranges;
+		uint64_t totalLength;
 	};
 }

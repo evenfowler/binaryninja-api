@@ -1291,6 +1291,53 @@ class _FunctionAssociatedDataStore(associateddatastore._AssociatedDataStore):
 	_defaults = {}
 
 
+class AddressRange(object):
+	def __init__(self, start, end):
+		self._start = start
+		self._end = end
+
+	def __repr__(self):
+		return "<%#x-%#x>" % (self._start, self._end)
+
+	def __len__(self):
+		return self._end - self.start
+
+	def __eq__(self, other):
+		if not isinstance(other, self.__class__):
+			return NotImplemented
+		return (self._start, self._end) == (other._start, other._end)
+
+	def __ne__(self, other):
+		if not isinstance(other, self.__class__):
+			return NotImplemented
+		return not (self == other)
+
+	def __hash__(self):
+		return hash((self._start, self._end))
+
+	@property
+	def length(self):
+		return self._end - self._start
+
+	@property
+	def start(self):
+		""" """
+		return self._start
+
+	@start.setter
+	def start(self, value):
+		self._start = value
+
+	@property
+	def end(self):
+		""" """
+		return self._end
+
+	@end.setter
+	def end(self, value):
+		self._end = value
+
+
 class Function(object):
 	_associated_data = {}
 
@@ -1449,12 +1496,23 @@ class Function(object):
 	@property
 	def highest_address(self):
 		"The highest virtual address contained in a function."""
-		return max(self, key=lambda block:block.end).end - 1
+		return core.BNGetFunctionHighestAddress(self.handle)
 
 	@property
 	def lowest_address(self):
 		"""The lowest virtual address contained in a function."""
-		return min(self, key=lambda block:block.start).start
+		return core.BNGetFunctionLowestAddress(self.handle)
+
+	@property
+	def address_ranges(self):
+		"""All of the address ranges covered by a function"""
+		count = ctypes.c_ulonglong(0)
+		range_list = core.BNGetFunctionAddressRanges(self.handle, count)
+		result = []
+		for i in range(0, count.value):
+			result.append(AddressRange(range_list[i].start, range_list[i].end))
+		core.BNFreeAddressRanges(range_list)
+		return result
 
 	@property
 	def symbol(self):

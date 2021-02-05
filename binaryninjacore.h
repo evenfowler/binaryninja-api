@@ -2174,6 +2174,22 @@ extern "C"
 		FindCaseInsensitive = 1
 	};
 
+	enum BNFindRangeType
+	{
+		AllRangeType,
+		CustomRangeType,
+		CurrentFunctionRangeType
+	};
+
+	enum BNFindType
+	{
+		FindTypeRawString,
+		FindTypeEscapedString,
+		FindTypeText,
+		FindTypeConstant,
+		FindTypeBytes
+	};
+
 	enum BNScriptingProviderInputReadyState
 	{
 		NotReadyForInput,
@@ -2815,12 +2831,29 @@ __attribute__ ((format (printf, 1, 2)))
 	BINARYNINJACOREAPI bool BNFindNextConstant(BNBinaryView* view, uint64_t start, uint64_t constant, uint64_t* result,
 		BNDisassemblySettings* settings);
 
-	BINARYNINJACOREAPI bool BNFindNextDataWithProgress(BNBinaryView* view, uint64_t start, uint64_t end, BNDataBuffer* data, uint64_t* result, BNFindFlag flags,
+	BINARYNINJACOREAPI bool BNFindNextDataWithProgress(BNBinaryView* view, uint64_t start,
+		uint64_t end, BNDataBuffer* data, uint64_t* result, BNFindFlag flags,
 		void* ctxt, bool (*progress)(void* ctxt, size_t current, size_t total));
 	BINARYNINJACOREAPI bool BNFindNextTextWithProgress(BNBinaryView* view, uint64_t start, uint64_t end, const char* data, uint64_t* result,
 		BNDisassemblySettings* settings, BNFindFlag flags, void* ctxt, bool (*progress)(void* ctxt, size_t current, size_t total));
 	BINARYNINJACOREAPI bool BNFindNextConstantWithProgress(BNBinaryView* view, uint64_t start, uint64_t end, uint64_t constant, uint64_t* result,
 		BNDisassemblySettings* settings, void* ctxt, bool (*progress)(void* ctxt, size_t current, size_t total));
+
+	BINARYNINJACOREAPI bool BNFindAllDataWithProgress(BNBinaryView* view, uint64_t start,
+		uint64_t end, BNDataBuffer* data, BNFindFlag flags,
+		void* ctxt, bool (*progress)(void* ctxt, size_t current, size_t total),
+		void* matchCtxt,
+		bool (*matchCallback)(void* matchCtxt, uint64_t addr, BNDataBuffer* match));
+	BINARYNINJACOREAPI bool BNFindAllTextWithProgress(BNBinaryView* view, uint64_t start,
+		uint64_t end, const char* data, BNDisassemblySettings* settings, BNFindFlag flags,
+		void* ctxt, bool (*progress)(void* ctxt, size_t current, size_t total),
+		void* matchCtxt,
+		bool (*matchCallback)(void* matchCtxt, uint64_t addr, const char* match));
+	BINARYNINJACOREAPI bool BNFindAllConstantWithProgress(BNBinaryView* view, uint64_t start,
+		uint64_t end, uint64_t constant, BNDisassemblySettings* settings, void* ctxt,
+		bool (*progress)(void* ctxt, size_t current, size_t total),
+		void* matchCtxt,
+		bool (*matchCallback)(void* matchCtxt, uint64_t addr));
 
 	BINARYNINJACOREAPI void BNAddAutoSegment(BNBinaryView* view, uint64_t start, uint64_t length,
 		uint64_t dataOffset, uint64_t dataLength, uint32_t flags);
@@ -3154,6 +3187,10 @@ __attribute__ ((format (printf, 1, 2)))
 	BINARYNINJACOREAPI BNBasicBlock* BNGetRecentBasicBlockForAddress(BNBinaryView* view, uint64_t addr);
 	BINARYNINJACOREAPI BNBasicBlock** BNGetBasicBlocksForAddress(BNBinaryView* view, uint64_t addr, size_t* count);
 	BINARYNINJACOREAPI BNBasicBlock** BNGetBasicBlocksStartingAtAddress(BNBinaryView* view, uint64_t addr, size_t* count);
+
+	BINARYNINJACOREAPI uint64_t BNGetFunctionHighestAddress(BNFunction* func);
+	BINARYNINJACOREAPI uint64_t BNGetFunctionLowestAddress(BNFunction* func);
+	BINARYNINJACOREAPI BNAddressRange* BNGetFunctionAddressRanges(BNFunction* func, size_t* count);
 
 	BINARYNINJACOREAPI BNLowLevelILFunction* BNGetFunctionLowLevelIL(BNFunction* func);
 	BINARYNINJACOREAPI BNLowLevelILFunction* BNGetFunctionLowLevelILIfAvailable(BNFunction* func);
