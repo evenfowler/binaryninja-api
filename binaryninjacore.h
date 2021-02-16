@@ -4023,9 +4023,10 @@ __attribute__ ((format (printf, 1, 2)))
 	BINARYNINJACOREAPI void BNReplaceMediumLevelILExpr(BNMediumLevelILFunction* func, size_t expr, size_t newExpr);
 
 	BINARYNINJACOREAPI bool BNGetMediumLevelILExprText(BNMediumLevelILFunction* func, BNArchitecture* arch, size_t i,
-		BNInstructionTextToken** tokens, size_t* count);
+		BNInstructionTextToken** tokens, size_t* count,
+		BNDisassemblySettings* settings);
 	BINARYNINJACOREAPI bool BNGetMediumLevelILInstructionText(BNMediumLevelILFunction* il, BNFunction* func,
-		BNArchitecture* arch, size_t i, BNInstructionTextToken** tokens, size_t* count);
+		BNArchitecture* arch, size_t i, BNInstructionTextToken** tokens, size_t* count, BNDisassemblySettings* settings);
 
 	BINARYNINJACOREAPI BNBasicBlock** BNGetMediumLevelILBasicBlockList(BNMediumLevelILFunction* func, size_t* count);
 	BINARYNINJACOREAPI BNBasicBlock* BNGetMediumLevelILBasicBlockForInstruction(BNMediumLevelILFunction* func, size_t i);
@@ -4148,7 +4149,7 @@ __attribute__ ((format (printf, 1, 2)))
 	BINARYNINJACOREAPI void BNReplaceHighLevelILExpr(BNHighLevelILFunction* func, size_t expr, size_t newExpr);
 
 	BINARYNINJACOREAPI BNDisassemblyTextLine* BNGetHighLevelILExprText(BNHighLevelILFunction* func, size_t expr,
-		bool asFullAst, size_t* count);
+		bool asFullAst, size_t* count, BNDisassemblySettings* settings);
 
 	BINARYNINJACOREAPI BNTypeWithConfidence BNGetHighLevelILExprType(BNHighLevelILFunction* func, size_t expr);
 
