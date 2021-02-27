@@ -456,6 +456,12 @@ Tag::Tag(Ref<TagType> type, const std::string& data)
 }
 
 
+std::string Tag::GetId() const
+{
+	return BNTagGetId(m_object);
+}
+
+
 Ref<TagType> Tag::GetType() const
 {
 	return new TagType(BNTagGetType(m_object));
