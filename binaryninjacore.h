@@ -590,6 +590,7 @@ extern "C"
 		GroupLinearDisassemblyFunctions = 64,
 		HighLevelILLinearDisassembly = 65,
 		WaitForIL = 66,
+		IndentHLILBody = 67,
 
 		// Debugging options
 		ShowFlagUsage = 128
