@@ -1729,28 +1729,30 @@ __attribute__ ((format (printf, 1, 2)))
 
 		bool FindNextData(uint64_t start, const DataBuffer& data, uint64_t& result,
 			BNFindFlag flags = FindCaseSensitive);
-		bool FindNextText(uint64_t start, const std::string& data, uint64_t& addr, Ref<DisassemblySettings> settings,
-			BNFindFlag flags = FindCaseSensitive);
-		bool FindNextConstant(uint64_t start, uint64_t constant, uint64_t& addr, Ref<DisassemblySettings> settings);
+		bool FindNextText(uint64_t start, const std::string& data, uint64_t& addr,
+			Ref<DisassemblySettings> settings, BNFindFlag flags = FindCaseSensitive,
+			BNFunctionGraphType graph = NormalFunctionGraph);
+		bool FindNextConstant(uint64_t start, uint64_t constant, uint64_t& addr,
+			Ref<DisassemblySettings> settings,  BNFunctionGraphType graph = NormalFunctionGraph);
 
 		bool FindNextData(uint64_t start, uint64_t end, const DataBuffer& data, uint64_t& addr,
 			BNFindFlag flags, const std::function<bool(size_t current, size_t total)>& progress);
 		bool FindNextText(uint64_t start, uint64_t end, const std::string& data, uint64_t& addr,
-			Ref<DisassemblySettings> settings, BNFindFlag flags,
+			Ref<DisassemblySettings> settings, BNFindFlag flags, BNFunctionGraphType graph,
 			const std::function<bool(size_t current, size_t total)>& progress);
 		bool FindNextConstant(uint64_t start, uint64_t end, uint64_t constant, uint64_t& addr,
-			Ref<DisassemblySettings> settings,
+			Ref<DisassemblySettings> settings, BNFunctionGraphType graph,
 			const std::function<bool(size_t current, size_t total)>& progress);
 
 		bool FindAllData(uint64_t start, uint64_t end, const DataBuffer& data, BNFindFlag flags,
 			const std::function<bool(size_t current, size_t total)>& progress,
 			const std::function<bool(uint64_t addr, const DataBuffer& match)>& matchCallback);
 		bool FindAllText(uint64_t start, uint64_t end, const std::string& data,
-			Ref<DisassemblySettings> settings, BNFindFlag flags,
+			Ref<DisassemblySettings> settings, BNFindFlag flags, BNFunctionGraphType graph,
 			const std::function<bool(size_t current, size_t total)>& progress,
 			const std::function<bool(uint64_t addr, const std::string& match)>& matchCallback);
 		bool FindAllConstant(uint64_t start, uint64_t end, uint64_t constant,
-			Ref<DisassemblySettings> settings,
+			Ref<DisassemblySettings> settings, BNFunctionGraphType graph,
 			const std::function<bool(size_t current, size_t total)>& progress,
 			const std::function<bool(uint64_t addr)>& matchCallback);
 
@@ -5549,6 +5551,7 @@ __attribute__ ((format (printf, 1, 2)))
 	{
 		BNFindType type;
 		BNFindRangeType rangeType;
+		BNFunctionGraphType ilType;
 		std::string string;
 		BNFindFlag flags;
 		bool findAll;
