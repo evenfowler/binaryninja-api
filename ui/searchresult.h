@@ -18,25 +18,52 @@
 
 #define FIND_RESULT_LIST_UPDATE_INTERVAL 250
 
+class CachedTokens
+{
+public:
+    QVariant tokens;
+    QVariant flattenedTokens;
+    size_t size;
+    bool valid;
+
+    CachedTokens(): valid(false) {}
+    CachedTokens(const CachedTokens& other):
+        tokens(other.tokens), flattenedTokens(other.flattenedTokens),
+        size(other.size), valid(other.valid)
+    {}
+};
+
+
 class SearchResultItem
 {
 private:
     uint64_t m_addr;
     BinaryNinja::DataBuffer m_buffer;
     FunctionRef m_func;
+    // size_t m_functionSizeCache, m_previewSizeCache;
+    CachedTokens m_tokensCache[4];
 
 public:
-    SearchResultItem() {}
+    SearchResultItem();
     SearchResultItem(uint64_t addr, const BinaryNinja::DataBuffer& buffer, FunctionRef func);
-    SearchResultItem(const SearchResultItem& other):
-        m_addr(other.addr()), m_buffer(other.buffer()), m_func(other.func())
-    {}
+    SearchResultItem(const SearchResultItem& other);
     uint64_t addr() const { return m_addr; }
     BinaryNinja::DataBuffer buffer() const { return m_buffer; }
     FunctionRef func() const { return m_func; }
     bool operator==(const SearchResultItem& other) const { return m_addr == other.addr(); }
     bool operator!=(const SearchResultItem& other) const { return m_addr != other.addr(); }
     bool operator<(const SearchResultItem& other) const { return m_addr < other.addr(); }
+
+    // TODO: check if i is beyond the range
+    CachedTokens getCachedTokens(size_t i) const { return m_tokensCache[i]; }
+    CachedTokens& getCachedTokens(size_t i) { return m_tokensCache[i]; }
+    void setCachedTokens(size_t i, QVariant tokens, QVariant flattenedTokens, size_t size)
+    {
+        m_tokensCache[i].tokens = tokens;
+        m_tokensCache[i].flattenedTokens = flattenedTokens;
+        m_tokensCache[i].size = size;
+        m_tokensCache[i].valid = true;
+    }
 };
 
 Q_DECLARE_METATYPE(SearchResultItem);
