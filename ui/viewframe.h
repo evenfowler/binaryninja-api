@@ -322,12 +322,16 @@ public:
 	QString getShortFileName();
 	std::vector<QString> getAvailableTypes() const;
 
-	QString getCurrentView();
-	QString getCurrentDataType();
-	uint64_t getCurrentOffset();
-	BNAddressRange getSelectionOffsets();
+	QString getCurrentView() const;
+	QString getCurrentDataType() const;
+	uint64_t getCurrentOffset() const;
+	BNAddressRange getSelectionOffsets() const;
 
-	ViewLocation getViewLocation();
+	bool isGraphView() const { return getCurrentView().startsWith("Graph:"); }
+	bool isLinearView() const { return getCurrentView().startsWith("Linear:"); }
+	bool isTypeView() const { return getCurrentView().startsWith("Type:"); }
+
+	ViewLocation getViewLocation() const;
 	void setViewLocation(const ViewLocation& viewLocation);
 
 	View* getCurrentViewInterface() const { return View::getViewFromWidget(m_view); }
@@ -350,9 +354,9 @@ public:
 	bool goToReference(BinaryViewRef data, FunctionRef func, uint64_t source, uint64_t target, bool addHistoryEntry = true);
 	bool navigateToViewLocation(BinaryViewRef data, const ViewLocation& viewLocation,
 		bool addHistoryEntry = true);
-	QString getTypeForView(QWidget* view);
-	QString getDataTypeForView(const QString& type);
-	QString getDataTypeForView(QWidget* view);
+	QString getTypeForView(QWidget* view) const;
+	QString getDataTypeForView(const QString& type) const;
+	QString getDataTypeForView(QWidget* view) const;
 
 	bool closeRequest();
 	void closing();
