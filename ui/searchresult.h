@@ -40,7 +40,6 @@ private:
     uint64_t m_addr;
     BinaryNinja::DataBuffer m_buffer;
     FunctionRef m_func;
-    // size_t m_functionSizeCache, m_previewSizeCache;
     CachedTokens m_tokensCache[4];
 
 public:
@@ -68,6 +67,7 @@ public:
 
 Q_DECLARE_METATYPE(SearchResultItem);
 
+
 class BINARYNINJAUIAPI SearchResultModel: public QAbstractTableModel
 {
     Q_OBJECT
@@ -78,6 +78,7 @@ protected:
     ViewFrame* m_view;
     BinaryNinja::FindParameters m_params;
     std::vector<SearchResultItem> m_refs;
+    mutable size_t m_columnWidths[4];
 
     std::mutex m_updateMutex;
     std::set<SearchResultItem> m_pendingSearchResults;
@@ -93,6 +94,8 @@ public:
 
     SearchResultModel(QWidget* parent, BinaryViewRef data, ViewFrame* view);
     virtual ~SearchResultModel();
+
+    virtual QModelIndex index(int row, int col, const QModelIndex& parent = QModelIndex()) const override;
 
     void reset();
     virtual int rowCount(const QModelIndex& parent = QModelIndex()) const override { (void) parent; return (int)m_refs.size(); }
