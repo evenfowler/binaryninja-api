@@ -35,7 +35,7 @@ from collections import OrderedDict
 from binaryninja import _binaryninjacore as core
 from binaryninja.enums import (AnalysisState, SymbolType, InstructionTextTokenType,
 	Endianness, ModificationStatus, StringType, SegmentFlag, SectionSemantics, FindFlag,
-	TypeClass, SaveOption, BinaryViewEventType)
+	TypeClass, SaveOption, BinaryViewEventType, FunctionGraphType)
 import binaryninja
 from binaryninja import associateddatastore # required for _BinaryViewAssociatedDataStore
 from binaryninja import log
@@ -5438,7 +5438,8 @@ class BinaryView(object):
 		return result.value
 
 
-	def find_next_text(self, start, text, settings=None, flags=FindFlag.FindCaseSensitive):
+	def find_next_text(self, start, text, settings=None, flags=FindFlag.FindCaseSensitive,\
+		graph_type = FunctionGraphType.NormalFunctionGraph):
 		"""
 		``find_next_text`` searches for string ``text`` occurring in the linear view output starting at the virtual
 		address ``start`` until the end of the BinaryView.
@@ -5462,11 +5463,13 @@ class BinaryView(object):
 			raise TypeError("settings parameter is not DisassemblySettings type")
 
 		result = ctypes.c_ulonglong()
-		if not core.BNFindNextText(self.handle, start, text, result, settings.handle, flags):
+		if not core.BNFindNextText(self.handle, start, text, result, settings.handle, flags,\
+			graph_type):
 			return None
 		return result.value
 
-	def find_next_constant(self, start, constant, settings=None):
+	def find_next_constant(self, start, constant, settings=None,\
+		graph_type = FunctionGraphType.NormalFunctionGraph):
 		"""
 		``find_next_constant`` searches for integer constant ``constant`` occurring in the linear view output starting at the virtual
 		address ``start`` until the end of the BinaryView.
@@ -5483,7 +5486,8 @@ class BinaryView(object):
 			raise TypeError("settings parameter is not DisassemblySettings type")
 
 		result = ctypes.c_ulonglong()
-		if not core.BNFindNextConstant(self.handle, start, constant, result, settings.handle):
+		if not core.BNFindNextConstant(self.handle, start, constant, result, settings.handle,\
+			graph_type):
 			return None
 		return result.value
 	
@@ -5568,7 +5572,8 @@ class BinaryView(object):
 			return self.QueueGenerator(t, results)
 
 	def find_all_text(self, start, end, text, settings = None, flags = FindFlag.FindCaseSensitive,
-		progress_func = None, match_callback = None):
+		graph_type = FunctionGraphType.NormalFunctionGraph, progress_func = None,
+		match_callback = None, ):
 		"""
 		``find_all_text`` searches for string ``text`` occurring in the linear view output starting
 		at the virtual address ``start`` until the virtual address ``end``. Once a match is found,
@@ -5620,7 +5625,7 @@ class BinaryView(object):
 				ctypes.c_char_p)(lambda ctxt, addr, match: not match_callback(addr, match) is False)
 		
 			return core.BNFindAllTextWithProgress(self.handle, start, end, text, settings.handle,\
-				flags, None, progress_func_obj, None, match_callback_obj)
+				flags, graph_type, None, progress_func_obj, None, match_callback_obj)
 		else:
 			results = queue.Queue()
 			match_callback_obj = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p,
@@ -5628,12 +5633,13 @@ class BinaryView(object):
 				(lambda ctxt, addr, match: results.put((addr, match)) or True)
 
 			t = threading.Thread(target = lambda: core.BNFindAllTextWithProgress(self.handle,
-				start, end, text, settings.handle, flags, None, progress_func_obj, None,
+				start, end, text, settings.handle, flags, graph_type, None, progress_func_obj, None,
 				match_callback_obj))
 
 			return self.QueueGenerator(t, results)
 
-	def find_all_constant(self, start, end, constant, settings = None, progress_func = None,
+	def find_all_constant(self, start, end, constant, settings = None, 
+		graph_type = FunctionGraphType.NormalFunctionGraph, progress_func = None,
 		match_callback = None):
 		"""
 		``find_all_constant`` searches for the integer constant ``constant`` starting at the
@@ -5675,14 +5681,14 @@ class BinaryView(object):
 				(lambda ctxt, addr: not match_callback(addr) is False)
 		
 			return core.BNFindAllConstantWithProgress(self.handle, start, end, constant,
-				settings.handle, None, progress_func_obj, None, match_callback_obj)
+				settings.handle, graph_type, None, progress_func_obj, None, match_callback_obj)
 		else:
 			results = queue.Queue()
 			match_callback_obj = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_ulonglong)\
 				(lambda ctxt, addr: results.put(addr) or True)
 
 			t = threading.Thread(target = lambda: core.BNFindAllConstantWithProgress(self.handle,
-				start, end, constant, settings.handle, None, progress_func_obj, None,\
+				start, end, constant, graph_type, settings.handle, None, progress_func_obj, None,\
 				match_callback_obj))
 			
 			return self.QueueGenerator(t, results)
