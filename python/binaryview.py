@@ -5446,6 +5446,7 @@ class BinaryView(object):
 
 		:param int start: virtual address to start searching from.
 		:param str text: text to search for
+		:param DisassemblySettings settings: disassembly settings
 		:param FindFlag flags: (optional) defaults to case-insensitive data search
 
 			==================== ============================
@@ -5454,6 +5455,7 @@ class BinaryView(object):
 			FindCaseSensitive    Case-sensitive search
 			FindCaseInsensitive  Case-insensitive search
 			==================== ============================
+		:param FunctionGraphType graph_type: the IL to search wihtin
 		"""
 		if not isinstance(text, str):
 			raise TypeError("text parameter is not str type")
@@ -5477,6 +5479,7 @@ class BinaryView(object):
 		:param int start: virtual address to start searching from.
 		:param int constant: constant to search for
 		:param DisassemblySettings settings: disassembly settings
+		:param FunctionGraphType graph_type: the IL to search wihtin
 		"""
 		if not isinstance(constant, numbers.Integral):
 			raise TypeError("constant parameter is not integral type")
@@ -5592,6 +5595,7 @@ class BinaryView(object):
 			FindCaseSensitive    Case-sensitive search
 			FindCaseInsensitive  Case-insensitive search
 			==================== ============================
+		:param FunctionGraphType graph_type: the IL to search wihtin
 		:param callback progress_func: optional function to be called with the current progress
 		and total count. This function should return a boolean value that decides whether the
 		search should conitnue or stop
@@ -5651,6 +5655,7 @@ class BinaryView(object):
 		:param int constant: constant to search for
 		:param DisassemblySettings settings: DisassemblySettings object used to render the text
 		to be searched
+		:param FunctionGraphType graph_type: the IL to search wihtin
 		:param callback progress_func: optional function to be called with the current progress
 		and total count. This function should return a boolean value that decides whether the
 		search should conitnue or stop
