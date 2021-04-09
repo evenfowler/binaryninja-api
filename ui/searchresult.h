@@ -17,19 +17,18 @@
 #include "expandablegroup.h"
 
 #define FIND_RESULT_LIST_UPDATE_INTERVAL 250
+#define COLUMN_MIN_WIDTH_IN_CHAR 10
 
 class CachedTokens
 {
 public:
     QVariant tokens;
     QVariant flattenedTokens;
-    size_t size;
     bool valid;
 
     CachedTokens(): valid(false) {}
     CachedTokens(const CachedTokens& other):
-        tokens(other.tokens), flattenedTokens(other.flattenedTokens),
-        size(other.size), valid(other.valid)
+        tokens(other.tokens), flattenedTokens(other.flattenedTokens), valid(other.valid)
     {}
 };
 
@@ -56,11 +55,10 @@ public:
     // TODO: check if i is beyond the range
     CachedTokens getCachedTokens(size_t i) const { return m_tokensCache[i]; }
     CachedTokens& getCachedTokens(size_t i) { return m_tokensCache[i]; }
-    void setCachedTokens(size_t i, QVariant tokens, QVariant flattenedTokens, size_t size)
+    void setCachedTokens(size_t i, QVariant tokens, QVariant flattenedTokens)
     {
         m_tokensCache[i].tokens = tokens;
         m_tokensCache[i].flattenedTokens = flattenedTokens;
-        m_tokensCache[i].size = size;
         m_tokensCache[i].valid = true;
     }
 };
@@ -107,6 +105,9 @@ public:
     void clear();
     void updateFindParameters(const BinaryNinja::FindParameters params);
     void updateSearchResults();
+
+    size_t getColumnWidth(size_t column) const { return m_columnWidths[column]; }
+    void resetColumnWidth();
 };
 
 
@@ -133,8 +134,6 @@ public:
     SearchResultItemDelegate(QWidget* parent);
     void updateFonts();
     void paint(QPainter* painter, const QStyleOptionViewItem& option, const QModelIndex& idx) const;
-    virtual QSize sizeHint(const QStyleOptionViewItem& option, const QModelIndex& idx) const;
-
 };
 
 class SearchResultWidget;
@@ -150,6 +149,8 @@ class BINARYNINJAUIAPI SearchResultTable: public QTableView
     BinaryNinja::FindParameters m_params;
     UIActionHandler m_actionHandler;
     QTimer* m_updateTimer;
+
+    int m_charWidth, m_charHeight;
 
 public:
     SearchResultTable(SearchResultWidget* parent, ViewFrame* view, BinaryViewRef data);
@@ -171,6 +172,9 @@ public:
 
     int rowCount() const;
     int filteredCount() const;
+
+    void updateColumnWidth();
+    void resetColumnWidth();
 
 public Q_SLOTS:
     void resultActivated(const QModelIndex& idx);
