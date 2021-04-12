@@ -4,6 +4,7 @@
 #include <QtCore/QItemSelectionModel>
 #include <QtCore/QSortFilterProxyModel>
 #include <QtCore/QModelIndex>
+#include <QtCore/QThread>
 #include <QtWidgets/QTableView>
 #include <QtWidgets/QTabWidget>
 #include <QtWidgets/QStyledItemDelegate>
@@ -152,6 +153,8 @@ class BINARYNINJAUIAPI SearchResultTable: public QTableView
 
     int m_charWidth, m_charHeight;
 
+    bool m_cacheThreadShouldExit;
+
 public:
     SearchResultTable(SearchResultWidget* parent, ViewFrame* view, BinaryViewRef data);
     virtual ~SearchResultTable();
@@ -176,6 +179,9 @@ public:
     void updateColumnWidth();
     void resetColumnWidth();
 
+    void cacheTokens(std::function<void(size_t, size_t)> progress);
+    void terminateCacheThread() { m_cacheThreadShouldExit = true; }
+
 public Q_SLOTS:
     void resultActivated(const QModelIndex& idx);
     void updateFilter(const QString& filterText);
@@ -199,6 +205,7 @@ class BINARYNINJAUIAPI SearchResultWidget: public QWidget, public DockContextHan
     ExpandableGroup* m_group;
     SearchProgressBar* m_progress;
     BinaryNinja::FindParameters m_params;
+    QThread* m_tokenCacheThread = nullptr;
 
     virtual void contextMenuEvent(QContextMenuEvent* event) override;
 
@@ -215,6 +222,8 @@ public:
     void clearSearchResult();
     bool updateProgress(uint64_t cur, uint64_t total);
     void notifySearchCompleted();
+    void cacheTokens();
+    void terminateCacheThread();
 
 public Q_SLOTS:
     void updateTotal();
