@@ -327,10 +327,6 @@ public:
 	uint64_t getCurrentOffset() const;
 	BNAddressRange getSelectionOffsets() const;
 
-	bool isGraphView() const { return getCurrentView().startsWith("Graph:"); }
-	bool isLinearView() const { return getCurrentView().startsWith("Linear:"); }
-	bool isTypeView() const { return getCurrentView().startsWith("Type:"); }
-
 	ViewLocation getViewLocation() const;
 	void setViewLocation(const ViewLocation& viewLocation);
 
