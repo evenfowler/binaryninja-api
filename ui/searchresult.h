@@ -179,7 +179,7 @@ public:
     void updateColumnWidth();
     void resetColumnWidth();
 
-    void cacheTokens(std::function<void(size_t, size_t)> progress);
+    void cacheTokens();
     void terminateCacheThread() { m_cacheThreadShouldExit = true; }
 
 public Q_SLOTS:
@@ -224,6 +224,7 @@ public:
     void notifySearchCompleted();
     void cacheTokens();
     void terminateCacheThread();
+    bool isSearchActive() const;
 
 public Q_SLOTS:
     void updateTotal();
@@ -249,4 +250,5 @@ public:
     void init();
     void reset();
     void show();
+    bool isRunning() const { return m_running; }
 };
