@@ -2971,6 +2971,8 @@ __attribute__ ((format (printf, 1, 2)))
 		bool IsMediumLevelILBlock() const;
 		Ref<LowLevelILFunction> GetLowLevelILFunction() const;
 		Ref<MediumLevelILFunction> GetMediumLevelILFunction() const;
+
+		bool GetInstructionContainingAddress(uint64_t addr, uint64_t* start);
 	};
 
 	struct VariableNameAndType
@@ -3311,6 +3313,8 @@ __attribute__ ((format (printf, 1, 2)))
 		uint64_t GetHighestAddress();
 		uint64_t GetLowestAddress();
 		std::vector<BNAddressRange> GetAddressRanges();
+
+		bool GetInstructionContainingAddress(Architecture* arch, uint64_t addr, uint64_t* start);
 	};
 
 	class AdvancedFunctionAnalysisDataRequestor

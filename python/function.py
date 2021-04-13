@@ -3504,6 +3504,13 @@ class Function(object):
 		core.BNFreeVariableReferenceSourceList(refs, count.value)
 		return result
 
+	def get_instruction_containing_address(self, addr, arch = None):
+		arch = self.arch if arch is None else arch
+		start = ctypes.c_uint64()
+		ret = core.BNGetInstructionContainingAddress(self.handle, arch.handle, addr,\
+			start)
+		return ret, start.value
+
 
 class AdvancedFunctionAnalysisDataRequestor(object):
 	def __init__(self, func = None):

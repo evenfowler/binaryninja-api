@@ -2193,6 +2193,13 @@ std::vector<BNAddressRange> Function::GetAddressRanges()
 }
 
 
+bool Function::GetInstructionContainingAddress(Architecture* arch,
+	uint64_t addr, uint64_t* start)
+{
+	return BNGetInstructionContainingAddress(m_object, arch->GetObject(), addr, start);
+}
+
+
 AdvancedFunctionAnalysisDataRequestor::AdvancedFunctionAnalysisDataRequestor(Function* func): m_func(func)
 {
 	if (m_func)
