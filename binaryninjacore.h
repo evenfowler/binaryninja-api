@@ -2855,14 +2855,16 @@ __attribute__ ((format (printf, 1, 2)))
 		BNFunctionGraphType graph, void* ctxt,
 		bool (*progress)(void* ctxt, size_t current, size_t total),
 		void* matchCtxt,
-		bool (*matchCallback)(void* matchCtxt, uint64_t addr, const char* match));
+		bool (*matchCallback)(void* matchCtxt, uint64_t addr, const char* match,
+			BNLinearDisassemblyLine* line));
 	BINARYNINJACOREAPI bool BNFindAllConstantWithProgress(BNBinaryView* view, uint64_t start,
 		uint64_t end, uint64_t constant, BNDisassemblySettings* settings,
 		BNFunctionGraphType graph,
 		void* ctxt,
 		bool (*progress)(void* ctxt, size_t current, size_t total),
 		void* matchCtxt,
-		bool (*matchCallback)(void* matchCtxt, uint64_t addr));
+		bool (*matchCallback)(void* matchCtxt, uint64_t addr,
+			BNLinearDisassemblyLine* line));
 
 	BINARYNINJACOREAPI void BNAddAutoSegment(BNBinaryView* view, uint64_t start, uint64_t length,
 		uint64_t dataOffset, uint64_t dataLength, uint32_t flags);

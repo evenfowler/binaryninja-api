@@ -2938,7 +2938,7 @@ static bool FindProgressCallback(void* ctxt, size_t progress, size_t total)
 
 struct MatchCallbackContextForDataBuffer
 {
-	std::function<bool(uint64_t, const DataBuffer& match)> func;
+	std::function<bool(uint64_t, const DataBuffer&)> func;
 };
 
 
@@ -2949,29 +2949,62 @@ static bool MatchCallbackForDataBuffer(void* ctxt, uint64_t addr, BNDataBuffer* 
 }
 
 
-struct MatchCallbackContextForString
+struct MatchCallbackContextForText
 {
-	std::function<bool(uint64_t, const string& match)> func;
+	std::function<bool(uint64_t, const string&, const LinearDisassemblyLine&)> func;
 };
 
 
-static bool MatchCallbackForString(void* ctxt, uint64_t addr, const char* buffer)
+static bool MatchCallbackForText(void* ctxt, uint64_t addr, const char* buffer,
+	BNLinearDisassemblyLine* line)
 {
-	MatchCallbackContextForString* cb = (MatchCallbackContextForString*)ctxt;
-	return cb->func(addr, string(buffer));
+	MatchCallbackContextForText* cb = (MatchCallbackContextForText*)ctxt;
+
+	LinearDisassemblyLine result;
+	result.type = line->type;
+	result.function = line->function ? new Function(BNNewFunctionReference(line->function)) : nullptr;
+	result.block = line->block ? new BasicBlock(BNNewBasicBlockReference(line->block)) : nullptr;
+	result.contents.addr = line->contents.addr;
+	result.contents.instrIndex = line->contents.instrIndex;
+	result.contents.highlight = line->contents.highlight;
+	result.contents.tokens = InstructionTextToken::ConvertInstructionTextTokenList(line->contents.tokens, line->contents.count);
+	result.contents.tags = Tag::ConvertTagList(line->contents.tags, line->contents.tagCount);
+	result.contents.typeInfo.hasTypeInfo = line->contents.typeInfo.hasTypeInfo;
+	result.contents.typeInfo.fieldIndex = line->contents.typeInfo.fieldIndex;
+	result.contents.typeInfo.parentType = line->contents.typeInfo.parentType ?
+		new Type(BNNewTypeReference(line->contents.typeInfo.parentType)) : nullptr;
+
+	BNFreeLinearDisassemblyLines(line, 1);
+	return cb->func(addr, string(buffer), result);
 }
 
 
-struct MatchCallbackContextForAddress
+struct MatchCallbackContextForConstant
 {
-	std::function<bool(uint64_t)> func;
+	std::function<bool(uint64_t, const LinearDisassemblyLine&)> func;
 };
 
 
-static bool MatchCallbackForAddress(void* ctxt, uint64_t addr)
+static bool MatchCallbackForConstant(void* ctxt, uint64_t addr, BNLinearDisassemblyLine* line)
 {
-	MatchCallbackContextForAddress* cb = (MatchCallbackContextForAddress*)ctxt;
-	return cb->func(addr);
+	MatchCallbackContextForConstant* cb = (MatchCallbackContextForConstant*)ctxt;
+
+	LinearDisassemblyLine result;
+	result.type = line->type;
+	result.function = line->function ? new Function(BNNewFunctionReference(line->function)) : nullptr;
+	result.block = line->block ? new BasicBlock(BNNewBasicBlockReference(line->block)) : nullptr;
+	result.contents.addr = line->contents.addr;
+	result.contents.instrIndex = line->contents.instrIndex;
+	result.contents.highlight = line->contents.highlight;
+	result.contents.tokens = InstructionTextToken::ConvertInstructionTextTokenList(line->contents.tokens, line->contents.count);
+	result.contents.tags = Tag::ConvertTagList(line->contents.tags, line->contents.tagCount);
+	result.contents.typeInfo.hasTypeInfo = line->contents.typeInfo.hasTypeInfo;
+	result.contents.typeInfo.fieldIndex = line->contents.typeInfo.fieldIndex;
+	result.contents.typeInfo.parentType = line->contents.typeInfo.parentType ?
+		new Type(BNNewTypeReference(line->contents.typeInfo.parentType)) : nullptr;
+
+	BNFreeLinearDisassemblyLines(line, 1);
+	return cb->func(addr, result);
 }
 
 
@@ -3022,28 +3055,30 @@ bool BinaryView::FindAllData(uint64_t start, uint64_t end, const DataBuffer& dat
 bool BinaryView::FindAllText(uint64_t start, uint64_t end, const std::string& data,
 	Ref<DisassemblySettings> settings, BNFindFlag flags, BNFunctionGraphType graph,
 	const std::function<bool(size_t current, size_t total)>& progress,
-	const std::function<bool(uint64_t addr, const std::string& match)>& matchCallback)
+	const std::function<bool(uint64_t addr, const std::string& match,
+		const LinearDisassemblyLine& line)>& matchCallback)
 {
 	FindProgressCallbackContext fp;
 	fp.func = progress;
-	MatchCallbackContextForString mc;
+	MatchCallbackContextForText mc;
 	mc.func = matchCallback;
 	return BNFindAllTextWithProgress(m_object, start, end, data.c_str(), settings->GetObject(),
-		flags, graph, &fp, FindProgressCallback, &mc, MatchCallbackForString);
+		flags, graph, &fp, FindProgressCallback, &mc, MatchCallbackForText);
 }
 
 
 bool BinaryView::FindAllConstant(uint64_t start, uint64_t end, uint64_t constant,
 	Ref<DisassemblySettings> settings, BNFunctionGraphType graph,
 	const std::function<bool(size_t current, size_t total)>& progress,
-	const std::function<bool(uint64_t addr)>& matchCallback)
+	const std::function<bool(uint64_t addr, const LinearDisassemblyLine& line)>&
+		matchCallback)
 {
 	FindProgressCallbackContext fp;
 	fp.func = progress;
-	MatchCallbackContextForAddress mc;
+	MatchCallbackContextForConstant mc;
 	mc.func = matchCallback;
 	return BNFindAllConstantWithProgress(m_object, start, end, constant, settings->GetObject(),
-		graph, &fp, FindProgressCallback, &mc, MatchCallbackForAddress);
+		graph, &fp, FindProgressCallback, &mc, MatchCallbackForConstant);
 }
 
 

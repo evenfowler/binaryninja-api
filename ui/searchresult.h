@@ -44,7 +44,10 @@ private:
 
 public:
     SearchResultItem();
-    SearchResultItem(uint64_t addr, const BinaryNinja::DataBuffer& buffer, FunctionRef func);
+    SearchResultItem(uint64_t addr, const BinaryNinja::DataBuffer& buffer,
+        FunctionRef func);
+    SearchResultItem(uint64_t addr, const BinaryNinja::DataBuffer& buffer,
+        FunctionRef func, const BinaryNinja::DisassemblyTextLine& line, QWidget* owner);
     SearchResultItem(const SearchResultItem& other);
     uint64_t addr() const { return m_addr; }
     BinaryNinja::DataBuffer buffer() const { return m_buffer; }
@@ -88,7 +91,8 @@ public:
         AddressColumn = 0,
         DataColumn = 1,
         FunctionColumn = 2,
-        PreviewColumn = 3
+        PreviewColumn = 3,
+        EndOfColumn = 4
     };
 
     SearchResultModel(QWidget* parent, BinaryViewRef data, ViewFrame* view);
@@ -108,6 +112,7 @@ public:
     void updateSearchResults();
 
     size_t getColumnWidth(size_t column) const { return m_columnWidths[column]; }
+    void updateColumnWidth(size_t column, size_t size) const;
     void resetColumnWidth();
 };
 
@@ -182,6 +187,8 @@ public:
     void cacheTokens();
     void terminateCacheThread() { m_cacheThreadShouldExit = true; }
 
+    SearchResultModel* model() const { return m_table; }
+
 public Q_SLOTS:
     void resultActivated(const QModelIndex& idx);
     void updateFilter(const QString& filterText);
@@ -219,6 +226,8 @@ public:
     virtual QString getHeaderText();
 
     void addSearchResult(uint64_t addr, const BinaryNinja::DataBuffer& match);
+    void addSearchResult(uint64_t addr, const BinaryNinja::DataBuffer& match,
+        const BinaryNinja::LinearDisassemblyLine& line);
     void clearSearchResult();
     bool updateProgress(uint64_t cur, uint64_t total);
     void notifySearchCompleted();

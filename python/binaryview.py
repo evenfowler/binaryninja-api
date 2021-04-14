@@ -5574,9 +5574,24 @@ class BinaryView(object):
 
 			return self.QueueGenerator(t, results)
 
-	def find_all_text(self, start, end, text, settings = None, flags = FindFlag.FindCaseSensitive,
+	def _LinearDisassemblyLine_convertor(self, lines):
+		func = None
+		block = None
+		line = lines[0]
+		if line.function:
+			func = binaryninja.function.Function(self, core.BNNewFunctionReference(line.function))
+		if line.block:
+			block = binaryninja.basicblock.BasicBlock(core.BNNewBasicBlockReference(line.block), self)
+		color = highlight.HighlightColor._from_core_struct(line.contents.highlight)
+		addr = line.contents.addr
+		tokens = binaryninja.function.InstructionTextToken.get_instruction_lines(line.contents.tokens, line.contents.count)
+		contents = binaryninja.function.DisassemblyTextLine(tokens, addr, color = color)
+		return binaryninja.lineardisassembly.LinearDisassemblyLine(line.type, func, block, contents)
+
+	def find_all_text(self, start, end, text, settings = None,
+		flags = FindFlag.FindCaseSensitive,
 		graph_type = FunctionGraphType.NormalFunctionGraph, progress_func = None,
-		match_callback = None, ):
+		match_callback = None):
 		"""
 		``find_all_text`` searches for string ``text`` occurring in the linear view output starting
 		at the virtual address ``start`` until the virtual address ``end``. Once a match is found,
@@ -5600,10 +5615,12 @@ class BinaryView(object):
 		and total count. This function should return a boolean value that decides whether the
 		search should conitnue or stop
 		:param callback match_callback: function that gets called when a match is found. The
-		callback takes two parameters, i.e., the address of the match, and the actual string
-		that satisfies the search. If this parameter is None, this function becomes a generator
-		and yields a tuple of the matching address and the matched string. This function can
-		return a boolean value that decides whether the search should conitnue or stop
+		callback takes three parameters, i.e., the address of the match, and the actual string
+		that satisfies the search, and the LinearDisassemblyLine that contains the matching
+		line. If this parameter is None, this function becomes a generator
+		and yields a tuple of the matching address, the matched string, and the matching
+		LinearDisassemblyLine. This function can return a boolean value that decides whether
+		the search should conitnue or stop
 		:rtype bool: whether any (one or more) match is found for the search
 		"""
 		if not isinstance(text, str):
@@ -5625,16 +5642,21 @@ class BinaryView(object):
 				(lambda ctxt, cur, total: True)
 
 		if match_callback:
-			match_callback_obj = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_ulonglong,\
-				ctypes.c_char_p)(lambda ctxt, addr, match: not match_callback(addr, match) is False)
+			match_callback_obj = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p,
+				ctypes.c_ulonglong, ctypes.c_char_p,
+				ctypes.POINTER(core.BNLinearDisassemblyLine))\
+				(lambda ctxt, addr, match, line: match_callback(addr, match,\
+					self._LinearDisassemblyLine_convertor(line)) is False)
 		
-			return core.BNFindAllTextWithProgress(self.handle, start, end, text, settings.handle,\
-				flags, graph_type, None, progress_func_obj, None, match_callback_obj)
+			return core.BNFindAllTextWithProgress(self.handle, start, end, text,
+				settings.handle, flags, graph_type, None, progress_func_obj, None, match_callback_obj)
 		else:
 			results = queue.Queue()
 			match_callback_obj = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p,
-				ctypes.c_ulonglong, ctypes.c_char_p)\
-				(lambda ctxt, addr, match: results.put((addr, match)) or True)
+				ctypes.c_ulonglong, ctypes.c_char_p,
+				ctypes.POINTER(core.BNLinearDisassemblyLine))\
+				(lambda ctxt, addr, match, line: results.put((addr, match,\
+					self._LinearDisassemblyLine_convertor(line))) or True)
 
 			t = threading.Thread(target = lambda: core.BNFindAllTextWithProgress(self.handle,
 				start, end, text, settings.handle, flags, graph_type, None, progress_func_obj, None,
@@ -5660,9 +5682,11 @@ class BinaryView(object):
 		and total count. This function should return a boolean value that decides whether the
 		search should conitnue or stop
 		:param callback match_callback: function that gets called when a match is found. The
-		callback takes one parameters, i.e., the address of the match. If this parameter is None,
-		this function becomes a generator and yields the the matching address.  This function
-		can return a boolean value that decides whether the search should conitnue or stop
+		callback takes two parameters, i.e., the address of the match, and the
+		LinearDisassemblyLine that contains the matching line. If this parameter is None,
+		this function becomes a generator and yields the the matching address and the
+		matching LinearDisassemblyLine. This function can return a boolean value that
+		decides whether the search should conitnue or stop
 		:rtype bool: whether any (one or more) match is found for the search
 		"""
 		if not isinstance(constant, numbers.Integral):
@@ -5682,15 +5706,19 @@ class BinaryView(object):
 				(lambda ctxt, cur, total: True)
 
 		if match_callback:
-			match_callback_obj = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_ulonglong)\
-				(lambda ctxt, addr: not match_callback(addr) is False)
-		
+			match_callback_obj = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p,\
+				ctypes.c_ulonglong, ctypes.POINTER(core.BNLinearDisassemblyLine))\
+				(lambda ctxt, addr, line: not match_callback(addr,\
+					self._LinearDisassemblyLine_convertor(line)) is False)
+
 			return core.BNFindAllConstantWithProgress(self.handle, start, end, constant,
 				settings.handle, graph_type, None, progress_func_obj, None, match_callback_obj)
 		else:
 			results = queue.Queue()
-			match_callback_obj = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_ulonglong)\
-				(lambda ctxt, addr: results.put(addr) or True)
+			match_callback_obj = ctypes.CFUNCTYPE(ctypes.c_bool, ctypes.c_void_p,\
+				ctypes.c_ulonglong, ctypes.POINTER(core.BNLinearDisassemblyLine))\
+				(lambda ctxt, addr, line: results.put(addr,\
+					self._LinearDisassemblyLine_convertor(line)) or True)
 
 			t = threading.Thread(target = lambda: core.BNFindAllConstantWithProgress(self.handle,
 				start, end, constant, graph_type, settings.handle, None, progress_func_obj, None,\

@@ -14,6 +14,7 @@
 #include <stack>
 #include <utility>
 #include <vector>
+#include "binaryninjaapi.h"
 #include "filecontext.h"
 #include "viewtype.h"
 #include "action.h"
@@ -78,6 +79,7 @@ class FeatureMap;
 class StatusBarWidget;
 class ViewNavigationMode;
 class TransformParameterDialog;
+// struct BinaryNinjaCore::LinearDisassemblyLine;
 
 
 class BINARYNINJAUIAPI View
@@ -126,11 +128,13 @@ public:
 	virtual bool findAllText(uint64_t start, uint64_t end, const std::string& data, 
 		DisassemblySettingsRef settings, BNFindFlag flags, BNFunctionGraphType graph,
 		const std::function<bool (size_t current, size_t total)>& cb,
-		const std::function<bool (uint64_t addr, const std::string& match)>& matchCallback);
+		const std::function<bool (uint64_t addr, const std::string& match,
+			const BinaryNinja::LinearDisassemblyLine& line)>& matchCallback);
 	virtual bool findAllConstant(uint64_t start, uint64_t end, uint64_t constant, 
 		DisassemblySettingsRef settings, BNFunctionGraphType graph,
 		const std::function<bool (size_t current, size_t total)>& cb,
-		const std::function<bool (uint64_t addr)>& matchCallback);
+		const std::function<bool (uint64_t addr,
+			const BinaryNinja::LinearDisassemblyLine& line)>& matchCallback);
 
 	virtual BinaryViewRef getData() = 0;
 	virtual uint64_t getCurrentOffset() = 0;
@@ -386,6 +390,8 @@ public:
 	bool updateSearchProgress(uint64_t cur, uint64_t total);
 	void notifySearchCompleted();
 	void addSearchResult(uint64_t addr, const BinaryNinja::DataBuffer& match);
+	void addSearchResult(uint64_t addr, const BinaryNinja::DataBuffer& match,
+		const BinaryNinja::LinearDisassemblyLine& line);
 
 	virtual UIActionContext actionContext();
 	void bindActions();
