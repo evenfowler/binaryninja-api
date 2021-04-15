@@ -56,15 +56,9 @@ public:
     bool operator!=(const SearchResultItem& other) const { return m_addr != other.addr(); }
     bool operator<(const SearchResultItem& other) const { return m_addr < other.addr(); }
 
-    // TODO: check if i is beyond the range
-    CachedTokens getCachedTokens(size_t i) const { return m_tokensCache[i]; }
-    CachedTokens& getCachedTokens(size_t i) { return m_tokensCache[i]; }
-    void setCachedTokens(size_t i, QVariant tokens, QVariant flattenedTokens)
-    {
-        m_tokensCache[i].tokens = tokens;
-        m_tokensCache[i].flattenedTokens = flattenedTokens;
-        m_tokensCache[i].valid = true;
-    }
+    CachedTokens getCachedTokens(size_t i) const;
+    CachedTokens& getCachedTokens(size_t i);
+    void setCachedTokens(size_t i, QVariant tokens, QVariant flattenedTokens);
 };
 
 Q_DECLARE_METATYPE(SearchResultItem);
@@ -81,6 +75,9 @@ protected:
     BinaryNinja::FindParameters m_params;
     std::vector<SearchResultItem> m_refs;
     mutable size_t m_columnWidths[4];
+    // if this value is true, it means the user has overriden the automatically calculated width
+    // of the coumn, and we should not resize it anymore
+    bool m_userColumnWidth[4];
 
     std::mutex m_updateMutex;
     std::set<SearchResultItem> m_pendingSearchResults;
@@ -111,9 +108,14 @@ public:
     void updateFindParameters(const BinaryNinja::FindParameters params);
     void updateSearchResults();
 
-    size_t getColumnWidth(size_t column) const { return m_columnWidths[column]; }
+    size_t getColumnWidth(size_t column) const;
+    // This function is marked as const, but it actually modifies the mutable member m_columnWidths.
+    // It is called in SearchResultModel::data(), which is const. So it has to be const as well.
     void updateColumnWidth(size_t column, size_t size) const;
     void resetColumnWidth();
+
+    bool isUserColumnWidth(size_t column) const;
+    void setUserColumnWidth(size_t column);
 };
 
 
@@ -193,6 +195,7 @@ public Q_SLOTS:
     void resultActivated(const QModelIndex& idx);
     void updateFilter(const QString& filterText);
     void updateTimerEvent();
+    void columnResized(int logicalIndex, int oldSize, int newSize);
 
 Q_SIGNALS:
     void newSelection();
